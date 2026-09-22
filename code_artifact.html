@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة التسويق التفاعلي بالواقع المعزز | العرض الاستثماري</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            void: '#0B0F19',
+            cardbg: '#111827',
+            cyanNeon: '#00F0FF',
+            lootGold: '#FFB800',
+            actionGreen: '#10B981',
+            techSlate: '#94A3B8',
+            pureLight: '#F8FAFC'
+          },
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif'],
+            tajawal: ['Tajawal', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: #0B0F19;
+      color: #F8FAFC;
+      margin: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, h4, .font-heading {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    /* Cyberpunk / AR HUD Grid background */
+    .ar-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+    }
+
+    /* Glow effects */
+    .glow-cyan {
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.25);
+    }
+    .glow-gold {
+      box-shadow: 0 0 25px rgba(255, 184, 0, 0.3);
+    }
+    .text-glow-cyan {
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+    }
+
+    /* Scanline Animation */
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(1000%); }
+    }
+    .scanline-effect {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #00F0FF, transparent);
+      opacity: 0.7;
+      animation: scanline 4s linear infinite;
+    }
+
+    /* Radar Pulse Animation */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .pulse-radar {
+      animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    /* Floating AR Box */
+    @keyframes floatBox {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+    .ar-floating {
+      animation: floatBox 3.5s ease-in-out infinite;
+    }
+
+    /* Print styles for direct PDF export */
+    @media print {
+      body {
+        background-color: #0B0F19 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .slide-page {
+        display: block !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 40px !important;
+      }
+      .slide-viewport {
+        height: auto !important;
+        overflow: visible !important;
+      }
+    }
+  </style>
+</head>
+<body class="ar-grid relative min-h-screen flex flex-col justify-between selection:bg-cyanNeon selection:text-void">
+
+  <!-- Top Control Bar (Screen only) -->
+  <header class="no-print sticky top-0 z-50 bg-void/90 backdrop-blur-md border-b border-cyanNeon/20 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-cyanNeon/10 border border-cyanNeon flex items-center justify-center text-cyanNeon font-bold font-cairo">
+        <i class="fa-solid fa-crosshairs text-base"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-cairo font-bold text-white tracking-wide">منصة التسويق بالواقع المعزز (AR O2O)</h1>
+        <p class="text-xs text-techSlate">العرض الاستثماري الرسمي • الرمادي، العراق</p>
+      </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="flex items-center gap-2 sm:gap-4">
+      <div class="hidden sm:flex items-center bg-cardbg/80 border border-gray-800 rounded-full px-3 py-1 text-xs">
+        <span class="text-techSlate">شريحة: </span>
+        <span id="currentSlideNumber" class="text-cyanNeon font-bold font-mono px-1">01</span>
+        <span class="text-techSlate">/ 10</span>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <button onclick="prevSlide()" class="p-2 w-9 h-9 rounded-lg bg-cardbg border border-gray-700 hover:border-cyanNeon text-gray-300 hover:text-cyanNeon transition flex items-center justify-center" title="الشريحة السابقة (السهم الأيمن)">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+        <button onclick="nextSlide()" class="p-2 w-9 h-9 rounded-lg bg-cardbg border border-gray-700 hover:border-cyanNeon text-gray-300 hover:text-cyanNeon transition flex items-center justify-center" title="الشريحة التالية (السهم الأيسر)">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Quick PDF Print Button -->
+      <button onclick="window.print()" class="flex items-center gap-2 bg-gradient-to-r from-cyanNeon to-blue-600 text-void font-cairo font-bold px-3.5 py-1.5 rounded-lg text-xs hover:brightness-110 shadow-lg shadow-cyanNeon/20 transition cursor-pointer">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span class="hidden md:inline">تصدير العرض كـ PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Slides Viewport -->
+  <main class="slide-viewport flex-1 flex items-center justify-center p-3 sm:p-6 lg:p-10">
+    <div id="deckContainer" class="w-full max-w-6xl mx-auto">
+
+      <!-- ==============================================
+           SLIDE 1: Cover & Vision
+      =============================================== -->
+      <section id="slide-1" class="slide-page bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden glow-cyan">
+        <div class="scanline-effect"></div>
+        <div class="absolute top-4 left-4 flex gap-2">
+          <span class="px-2.5 py-1 rounded bg-cyanNeon/10 text-cyanNeon border border-cyanNeon/30 font-mono text-[11px] font-bold">O2O AR DECK</span>
+          <span class="px-2.5 py-1 rounded bg-lootGold/10 text-lootGold border border-lootGold/30 font-mono text-[11px] font-bold">SEED STAGE</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6">
+          <div class="lg:col-span-7 space-y-5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/80 border border-blue-500/40 text-cyanNeon text-xs font-semibold">
+              <i class="fa-solid fa-radar fa-spin text-[10px]"></i>
+              تقنية التسويق التجاري عبر التلعيب (Gamified Marketing)
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight">
+              منصة التسويق التفاعلي <br>
+              <span class="text-transparent bg-clip-text bg-gradient-to-l from-cyanNeon via-teal-300 to-lootGold">بالواقع المعزز (AR)</span>
+            </h1>
+            <p class="text-lg text-techSlate leading-relaxed">
+              تحويل حركة المشاة في شوارع الرمادي والمدن العراقية إلى زيارات فعلية ومبيعات مؤكدة أمام صندوق الكاشير (POS).
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
+              <div>
+                <span class="text-xs text-techSlate block">المؤسس والمدير التنفيذي</span>
+                <span class="text-sm font-bold text-white font-cairo">عمر</span>
+              </div>
+              <div>
+                <span class="text-xs text-techSlate block">سوق الانطلاق الأولي</span>
+                <span class="text-sm font-bold text-cyanNeon font-cairo">الرمادي، العراق</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual AR Phone Mockup -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="w-64 h-[380px] bg-void rounded-[36px] border-4 border-gray-700 p-2 relative shadow-2xl shadow-cyanNeon/10">
+              <div class="w-20 h-4 bg-gray-800 rounded-full mx-auto mb-2"></div>
+              <div class="w-full h-[326px] bg-gradient-to-b from-gray-900 via-slate-900 to-black rounded-[28px] relative overflow-hidden flex flex-col justify-between p-3 border border-cyanNeon/30">
+                <!-- Camera Live Feed Simulation -->
+                <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#00F0FF_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                
+                <div class="relative z-10 flex justify-between items-center text-[10px] text-cyanNeon">
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span> مباشر (Live AR)</span>
+                  <span>شارع المستودع - الرمادي</span>
+                </div>
+
+                <!-- Floating Coupon -->
+                <div class="relative z-10 my-auto text-center ar-floating">
+                  <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-lootGold to-amber-300 p-0.5 shadow-lg shadow-lootGold/50">
+                    <div class="w-full h-full bg-void/90 rounded-2xl flex flex-col items-center justify-center p-1">
+                      <i class="fa-solid fa-gift text-lootGold text-2xl mb-1"></i>
+                      <span class="text-[10px] font-bold text-lootGold">خصم 2,000 د.ع</span>
+                    </div>
+                  </div>
+                  <div class="mt-2 bg-void/80 backdrop-blur border border-cyanNeon/40 px-2 py-1 rounded-full inline-block text-[10px] text-white">
+                    🎯 مقهى كيان (يبعد 18 متراً)
+                  </div>
+                </div>
+
+                <div class="relative z-10">
+                  <button class="w-full py-2 bg-gradient-to-r from-actionGreen to-emerald-500 text-void font-cairo font-bold rounded-xl text-xs flex items-center justify-center gap-1 shadow-lg">
+                    <i class="fa-solid fa-bullseye"></i> اصطياد القسيمة
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 2: The Problem
+      =============================================== -->
+      <section id="slide-2" class="slide-page hidden bg-cardbg/95 border border-red-500/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-red-500/10 border border-red-500/30 text-red-400 font-mono text-xs font-bold">02 // THE PROBLEM</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">أزمة التسويق المحلي: إهدار مالي بلا عائد ملموس</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          أصحاب المشاريع التجارية في المدن العراقية يدفعون ملايين الدنانير أسبوعياً على إعلانات غير فعالة ولا تقود زبائن فعليين لنقطة البيع.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Problem 1 -->
+          <div class="p-6 rounded-xl bg-void/70 border border-red-900/40 relative">
+            <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 text-xl mb-4">
+              <i class="fa-solid fa-money-bill-transfer"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">نزيف الميزانيات الرقمية</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              الدفع لصفحات إنستغرام والمؤثرين دون أي قدرة على تتبع العائد المباشر على المبيعات (ROI). التاجر يدفع مقابل "مشاهدات افتراضية" وليس زبائن حقيقيين.
+            </p>
+          </div>
+
+          <!-- Problem 2 -->
+          <div class="p-6 rounded-xl bg-void/70 border border-red-900/40 relative">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-lootGold text-xl mb-4">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">ركود ساعات الهدوء</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              فترات الصباح وساعات الظهيرة تشهد فراغاً للمقاهي والمحلات. التاجر عاجز عن تصريف المخزون أو إرسال عروض فورية وموجهة مكانياً لتحريك الصندوق.
+            </p>
+          </div>
+
+          <!-- Problem 3 -->
+          <div class="p-6 rounded-xl bg-void/70 border border-red-900/40 relative">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl mb-4">
+              <i class="fa-solid fa-ticket-simple"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">موت الخصومات الكلاسيكية</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              برامج الولاء الورقية أو نسب الخصم التقليدية أصبحت مستهلكة ومملة للمستهلك الشاب، ولا تصنع الرغبة الملحة (Urgency) للشراء الفوري.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-8 p-4 rounded-xl bg-red-950/30 border border-red-500/30 flex items-center gap-4">
+          <i class="fa-solid fa-triangle-exclamation text-red-400 text-2xl"></i>
+          <p class="text-xs sm:text-sm text-red-200">
+            <strong>المفارقة الكبرى:</strong> التاجر لا يمانع منح خصم بقيمة 1,000 أو 2,000 دينار، لكنه يرفض دفعها مقدماً لشركات الإعلانات دون ضمان دخول الزبون لمقهاه أو صيدليته!
+          </p>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 3: The Solution
+      =============================================== -->
+      <section id="slide-3" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-cyanNeon/10 border border-cyanNeon/30 text-cyanNeon font-mono text-xs font-bold">03 // THE SOLUTION</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">تحويل شوارع المدينة إلى ساحة لعب واستكشاف</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          منصة تجمع الواقع المعزز (AR) مع حوافز مالية وتجارية موجهة تقود المستهلك حتى باب المحل التجاري الراعي.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-void/80 border border-cyanNeon/30 p-6 rounded-2xl relative group hover:border-cyanNeon transition">
+            <div class="text-3xl text-cyanNeon font-mono font-black mb-3">01</div>
+            <h3 class="text-xl font-bold text-white mb-2 font-cairo">الخريطة التفاعلية</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              خريطة حية للمدينة تُظهر "مناطق غنائم" ممولة من المتاجر المحلية (مقاهي، صيدليات، مطاعم) تحفز المشي والاستكشاف.
+            </p>
+            <div class="mt-4 pt-3 border-t border-gray-800 text-xs text-cyanNeon flex items-center gap-2">
+              <i class="fa-solid fa-location-crosshairs"></i> إسقاط جغرافي محدد (Geofencing)
+            </div>
+          </div>
+
+          <div class="bg-void/80 border border-lootGold/30 p-6 rounded-2xl relative group hover:border-lootGold transition">
+            <div class="text-3xl text-lootGold font-mono font-black mb-3">02</div>
+            <h3 class="text-xl font-bold text-white mb-2 font-cairo">الصيد بالواقع المعزز</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              عند الاقتراب من المتجر، تفتح الكاميرا ليرى المستخدم القسيمة أو صندوق المكافآت عائماً في الهواء بدقة ثلاثية الأبعاد.
+            </p>
+            <div class="mt-4 pt-3 border-t border-gray-800 text-xs text-lootGold flex items-center gap-2">
+              <i class="fa-solid fa-camera"></i> إفراز الدوبامين وشعور الإنجاز
+            </div>
+          </div>
+
+          <div class="bg-void/80 border border-actionGreen/30 p-6 rounded-2xl relative group hover:border-actionGreen transition">
+            <div class="text-3xl text-actionGreen font-mono font-black mb-3">03</div>
+            <h3 class="text-xl font-bold text-white mb-2 font-cairo">الاسترداد الفوري</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              القسيمة صالحة لفترة محدودة (مثلاً 20 دقيقة) وتتطلب الدخول لمكان الراعي ومسح رمز سريع أمام الكاشير للحصول على الخصم.
+            </p>
+            <div class="mt-4 pt-3 border-t border-gray-800 text-xs text-actionGreen flex items-center gap-2">
+              <i class="fa-solid fa-cash-register"></i> مبيعة مؤكدة للتاجر
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Flow Bar -->
+        <div class="mt-8 bg-void/50 p-4 rounded-xl border border-gray-800 flex flex-wrap items-center justify-between text-xs text-techSlate">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-person-walking text-cyanNeon"></i> مشي في الشارع</span>
+          <i class="fa-solid fa-arrow-left text-gray-600"></i>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-mobile-screen text-lootGold"></i> فتح كاميرا AR</span>
+          <i class="fa-solid fa-arrow-left text-gray-600"></i>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-400"></i> الفوز بالخصم</span>
+          <i class="fa-solid fa-arrow-left text-gray-600"></i>
+          <span class="flex items-center gap-2 font-bold text-actionGreen"><i class="fa-solid fa-bag-shopping"></i> شراء فوري أمام الكاشير</span>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 4: Customer & Merchant Journey
+      =============================================== -->
+      <section id="slide-4" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-cyanNeon/10 border border-cyanNeon/30 text-cyanNeon font-mono text-xs font-bold">04 // JOURNEY</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">رحلة القيمة: من الرغبة حتى إتمام الدفع</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <!-- Merchant Side -->
+          <div class="bg-void/90 p-6 rounded-2xl border border-blue-900/40 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+              <span class="font-cairo font-bold text-cyanNeon text-sm flex items-center gap-2">
+                <i class="fa-solid fa-store"></i> مسار التاجر (لوحة التحكم السحابية)
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">B2B Dashboard</span>
+            </div>
+            
+            <ul class="space-y-3 text-sm text-techSlate">
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-cyanNeon/10 text-cyanNeon flex items-center justify-center font-bold text-xs mt-0.5">1</div>
+                <div>
+                  <strong class="text-white block font-cairo">تحديد الحملة وساعات الركود:</strong>
+                  يحدد المقهى 50 قسيمة بخصم 15% تُطلق فقط بين الساعة 9 إلى 11 صباحاً.
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-cyanNeon/10 text-cyanNeon flex items-center justify-center font-bold text-xs mt-0.5">2</div>
+                <div>
+                  <strong class="text-white block font-cairo">تحديد النطاق الجغرافي:</strong>
+                  إسقاط القسائم في دائرة 500 متر حول الفرع لاستهداف المارة والطلاب.
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-cyanNeon/10 text-cyanNeon flex items-center justify-center font-bold text-xs mt-0.5">3</div>
+                <div>
+                  <strong class="text-white block font-cairo">مطابقة الكاشير الآلية:</strong>
+                  مسح ضوئي لحظي لرمز الزبون، مع تقرير يومي للمحاسب بمطابقة الصندوق.
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- User Side -->
+          <div class="bg-void/90 p-6 rounded-2xl border border-amber-900/40 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+              <span class="font-cairo font-bold text-lootGold text-sm flex items-center gap-2">
+                <i class="fa-solid fa-gamepad"></i> مسار المستخدم (اللعبة الميدانية)
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-lootGold/20 text-lootGold">Mobile Player</span>
+            </div>
+            
+            <ul class="space-y-3 text-sm text-techSlate">
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-lootGold/10 text-lootGold flex items-center justify-center font-bold text-xs mt-0.5">1</div>
+                <div>
+                  <strong class="text-white block font-cairo">تنبيه الرادار اللحظي:</strong>
+                  إشعار ذكي: "صندوق خصم نادر بالقرب من موقعك الآن في شارع 17".
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-lootGold/10 text-lootGold flex items-center justify-center font-bold text-xs mt-0.5">2</div>
+                <div>
+                  <strong class="text-white block font-cairo">التحدي واقتناص القسيمة:</strong>
+                  توجيه الكاميرا وحل لغز سريع في 5 ثوانٍ لحبس القسيمة في محفظته.
+                </div>
+              </li>
+              <li class="flex items-start gap-3">
+                <div class="w-6 h-6 rounded-full bg-lootGold/10 text-lootGold flex items-center justify-center font-bold text-xs mt-0.5">3</div>
+                <div>
+                  <strong class="text-white block font-cairo">الاستهلاك والشراء التبادلي:</strong>
+                  صرف الخصم على القهوة، وشراء قطعة حلوى بالسعر الكامل أثناء وجوده!
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 5: Business Model
+      =============================================== -->
+      <section id="slide-5" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-actionGreen/10 border border-actionGreen/30 text-actionGreen font-mono text-xs font-bold">05 // BUSINESS MODEL</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">نموذج الإيرادات واقتصاديات الوحدة</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          نموذج عمل بأصول خفيفة (Asset-Light) يدر دخلاً متعدد المصادر دون تحمل تكلفة الجوائز المالية من ميزانيتنا.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Revenue Stream 1 -->
+          <div class="p-6 rounded-2xl bg-void/80 border border-cyanNeon/30 flex flex-col justify-between">
+            <div>
+              <div class="text-xs text-cyanNeon font-mono font-bold mb-1">المصدر الأساسي // B2B</div>
+              <h3 class="text-lg font-bold text-white mb-3 font-cairo">عمولة الزيارة المؤكدة (CPA)</h3>
+              <p class="text-xs text-techSlate leading-relaxed mb-4">
+                يقتطع التطبيق عمولة ثابتة (مثلاً 250 - 500 دينار) أو نسبة مئوية عن كل قسيمة يتم صرفها فعلياً داخل المتجر. التاجر يدفع فقط عندما يربح.
+              </p>
+            </div>
+            <div class="bg-cyanNeon/10 p-3 rounded-xl border border-cyanNeon/30 text-center">
+              <span class="text-xs text-cyanNeon font-bold">دفع مشروط بإتمام المبيعة</span>
+            </div>
+          </div>
+
+          <!-- Revenue Stream 2 -->
+          <div class="p-6 rounded-2xl bg-void/80 border border-lootGold/30 flex flex-col justify-between">
+            <div>
+              <div class="text-xs text-lootGold font-mono font-bold mb-1">اشتراك دوري // SaaS</div>
+              <h3 class="text-lg font-bold text-white mb-3 font-cairo">باقات التجار الشهرية</h3>
+              <p class="text-xs text-techSlate leading-relaxed mb-4">
+                اشتراك شهري (50$ إلى 150$) يمنح المتجر لوحة تحكم لإسقاط قسائم غير محدودة، وتحليلات ديموغرافية، وتوجيه الزبائن لأوقات الركود.
+              </p>
+            </div>
+            <div class="bg-lootGold/10 p-3 rounded-xl border border-lootGold/30 text-center">
+              <span class="text-xs text-lootGold font-bold">تدفق نقدي شهري ثابت (MRR)</span>
+            </div>
+          </div>
+
+          <!-- Revenue Stream 3 -->
+          <div class="p-6 rounded-2xl bg-void/80 border border-actionGreen/30 flex flex-col justify-between">
+            <div>
+              <div class="text-xs text-actionGreen font-mono font-bold mb-1">إعلانات اللعبة // B2C</div>
+              <h3 class="text-lg font-bold text-white mb-3 font-cairo">شحن موارد الرادار</h3>
+              <p class="text-xs text-techSlate leading-relaxed mb-4">
+                إعلانات فيديو بمكافأة (Rewarded Ads). المستخدم يشاهد الإعلان لشحن بطارية الرادار والبحث عن قسائم نادرة. ربح صافٍ بالكامل للمنصة.
+              </p>
+            </div>
+            <div class="bg-actionGreen/10 p-3 rounded-xl border border-actionGreen/30 text-center">
+              <span class="text-xs text-actionGreen font-bold">هامش ربح إعلاني 100%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit Economics Highlight -->
+        <div class="mt-8 p-4 rounded-xl bg-slate-900 border border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <span class="text-xs text-techSlate block">تكلفة القسائم للمنصة</span>
+            <span class="text-lg font-black text-actionGreen font-mono">0 د.ع</span>
+          </div>
+          <div>
+            <span class="text-xs text-techSlate block">تكلفة استحواذ المستخدم (CAC)</span>
+            <span class="text-lg font-black text-cyanNeon font-mono">~0.15$</span>
+          </div>
+          <div>
+            <span class="text-xs text-techSlate block">القيمة الدائمة للمتجر (LTV)</span>
+            <span class="text-lg font-black text-lootGold font-mono">600$+ / سنوياً</span>
+          </div>
+          <div>
+            <span class="text-xs text-techSlate block">هامش الربح الإجمالي</span>
+            <span class="text-lg font-black text-white font-mono">78%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 6: Operational & Anti-Fraud Architecture
+      =============================================== -->
+      <section id="slide-6" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-purple-500/10 border border-purple-500/30 text-purple-400 font-mono text-xs font-bold">06 // ARCHITECTURE</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">هندسة النظام: احتكاك صفري وأمان مشدد</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-void/80 p-6 rounded-2xl border border-gray-800 space-y-4">
+            <h3 class="text-lg font-bold text-cyanNeon font-cairo flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> منظومة الحماية من الاحتيال (Anti-Cheat)
+            </h3>
+            <div class="space-y-3 text-sm text-techSlate">
+              <div class="p-3 rounded-lg bg-cardbg border border-gray-800">
+                <strong class="text-white block font-cairo">منع تزييف الموقع (Mock Location Detection):</strong>
+                حظر برامج Fake GPS وفحص اتساق إشارات الأبراج والـ Wi-Fi المحيطة للتأكد من الوجود الفيزيائي للاعب.
+              </div>
+              <div class="p-3 rounded-lg bg-cardbg border border-gray-800">
+                <strong class="text-white block font-cairo">تحديد معدل الطلبات والتزامن:</strong>
+                خوادم قادرة على استيعاب آلاف الاتصالات اللحظية المتزامنة دون انهيار وقت إسقاط القسائم النادرة.
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-void/80 p-6 rounded-2xl border border-gray-800 space-y-4">
+            <h3 class="text-lg font-bold text-lootGold font-cairo flex items-center gap-2">
+              <i class="fa-solid fa-bolt"></i> سلاسة الكاشير (Zero POS Friction)
+            </h3>
+            <div class="space-y-3 text-sm text-techSlate">
+              <div class="p-3 rounded-lg bg-cardbg border border-gray-800">
+                <strong class="text-white block font-cairo">استرداد في 3 ثوانٍ فقط:</strong>
+                رمز استجابة سريع وديناميكي مشفر (Dynamic QR) يتغير كل 30 ثانية لمنع مشاركة لقطات الشاشة بين الأصدقاء.
+              </div>
+              <div class="p-3 rounded-lg bg-cardbg border border-gray-800">
+                <strong class="text-white block font-cairo">تكامل مع جرد المواد والمبيعات:</strong>
+                لا يتطلب أجهزة إضافية؛ يعمل من أي هاتف للمحاسب مع تقرير نهاية اليوم لمطابقة المبيعات.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 7: Retention & Gamification
+      =============================================== -->
+      <section id="slide-7" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-lootGold/10 border border-lootGold/30 text-lootGold font-mono text-xs font-bold">07 // RETENTION</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">كسر فخ الانبهار المؤقت: كيف نضمن استمرار اللاعبين؟</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          الواقع المعزز هو مجرد طُعم البداية، لكن استدامة التطبيق لشهور وسنوات تعتمد على التنافس الاجتماعي وبناء العادات اليومية.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-void/80 p-5 rounded-2xl border border-gray-800 hover:border-lootGold transition">
+            <i class="fa-solid fa-ranking-star text-lootGold text-2xl mb-3"></i>
+            <h3 class="font-bold text-white mb-2 font-cairo">دوريات ومواسم شهرية</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              تقسيم النشاط إلى مواسم تنافسية ودوريات خاصة بين الأصدقاء في الرمادي لصدارة قائمة أكثر الصيادين توفيراً.
+            </p>
+          </div>
+
+          <div class="bg-void/80 p-5 rounded-2xl border border-gray-800 hover:border-cyanNeon transition">
+            <i class="fa-solid fa-gem text-cyanNeon text-2xl mb-3"></i>
+            <h3 class="font-bold text-white mb-2 font-cairo">الرتب والخرائط السرية</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              اللاعب الملتزم يترقى للرتبة الماسية؛ مما يفتح له خريطة سرية تظهر فيها قسائم خصومات كبرى لا يراها المبتدئون.
+            </p>
+          </div>
+
+          <div class="bg-void/80 p-5 rounded-2xl border border-gray-800 hover:border-actionGreen transition">
+            <i class="fa-solid fa-puzzle-piece text-actionGreen text-2xl mb-3"></i>
+            <h3 class="font-bold text-white mb-2 font-cairo">ألعاب مصغرة داخلية</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              ألعاب ذاكرة وأسئلة ذكاء يومية من المنزل لشحن بطارية الرادار، مما يضمن فتح التطبيق حتى في أيام الطقس الحار.
+            </p>
+          </div>
+
+          <div class="bg-void/80 p-5 rounded-2xl border border-gray-800 hover:border-purple-400 transition">
+            <i class="fa-solid fa-users text-purple-400 text-2xl mb-3"></i>
+            <h3 class="font-bold text-white mb-2 font-cairo">المهام الجماعية (Squads)</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              صناديق مكافآت ضخمة لا تُفتح إلا إذا تجمع 3 لاعبين معاً أمام المتجر وقاموا بمسح الكود في نفس اللحظة.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 8: Go-To-Market Strategy
+      =============================================== -->
+      <section id="slide-8" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-cyanNeon/10 border border-cyanNeon/30 text-cyanNeon font-mono text-xs font-bold">08 // GO-TO-MARKET</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">خطة الإطلاق فائق التركيز (الرمادي)</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          لن نشتت الموارد على مستوى المحافظة كاملة؛ سنصنع كثافة خانقة في شارع تجاري واحد حتى يصبح التطبيق حديث الشارع.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-6 rounded-2xl bg-void/80 border border-gray-800 relative">
+            <span class="text-xs px-2 py-1 rounded bg-blue-500/20 text-cyanNeon font-mono font-bold">المرحلة 1 // أيام 1-30</span>
+            <h3 class="text-lg font-bold text-white mt-3 mb-2 font-cairo">مثلث الشارع الحيوي</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              التعاقد مع 3 أنشطة متجاورة في شارع رئيسي (مقهى، صيدلية، مطعم). تمويل القسائم الأولى من جيبنا لإثبات زيادة المبيعات وضمان ثقة التجار.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-void/80 border border-gray-800 relative">
+            <span class="text-xs px-2 py-1 rounded bg-lootGold/20 text-lootGold font-mono font-bold">المرحلة 2 // أيام 31-60</span>
+            <h3 class="text-lg font-bold text-white mt-3 mb-2 font-cairo">الاستحواذ من الكاشير</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              لافتة عند الكاشير: "احصل على خصم 1000 د.ع فوراً على هذا الطلب بتحميل اللعبة واصطياد قسيمتك بالخارج". تحويل الزبائن إلى لاعبين بتكلفة تسويق صفرية.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-void/80 border border-gray-800 relative">
+            <span class="text-xs px-2 py-1 rounded bg-actionGreen/20 text-actionGreen font-mono font-bold">المرحلة 3 // أيام 61-90</span>
+            <h3 class="text-lg font-bold text-white mt-3 mb-2 font-cairo">التوسع كـ B2B SaaS</h3>
+            <p class="text-xs text-techSlate leading-relaxed">
+              استخدام تقارير الزيارات المحققة للمحلات الثلاثة كدراسة حالة قاطعة لبيع باقات الاشتراك لـ 50 نشاطاً تجارياً في عموم المدينة.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 9: Why Us (The Unfair Advantage)
+      =============================================== -->
+      <section id="slide-9" class="slide-page hidden bg-cardbg/95 border border-cyanNeon/30 rounded-2xl p-6 sm:p-12 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-cyanNeon/10 border border-cyanNeon/30 text-cyanNeon font-mono text-xs font-bold">09 // WHY US</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">الميزة التنافسية: تكامل الكود مع الميدان</h2>
+        </div>
+
+        <p class="text-techSlate mb-8 max-w-3xl">
+          أغلب التطبيقات تفشل لأن المبرمج لا يعرف كيف يبيع للتاجر، أو رجل المبيعات يعجز عن فهم القيود البرمجية. في مشروعنا، الحلان يجتمعان في قيادة واحدة.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-void/80 p-6 rounded-2xl border border-cyanNeon/30 space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-cyanNeon/10 text-cyanNeon flex items-center justify-center text-xl">
+              <i class="fa-solid fa-code"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white font-cairo">القدرة الهندسية المتينة</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              بناء وإدارة الخوادم اللحظية والواجهات الحديثة، مع تطبيق معايير الأمان لمنع تزييف المواقع، وتأمين تدفق البيانات بأقل استهلاك لموارد السحابة دون الحاجة لفريق برمجي باهظ التكاليف في مرحلة التأسيس.
+            </p>
+          </div>
+
+          <div class="bg-void/80 p-6 rounded-2xl border border-lootGold/30 space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-lootGold/10 text-lootGold flex items-center justify-center text-xl">
+              <i class="fa-solid fa-handshake"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white font-cairo">الممارسة الميدانية والمبيعات</h3>
+            <p class="text-sm text-techSlate leading-relaxed">
+              خبرة مبيعات ميدانية يومية في مخاطبة أصحاب المتاجر والصيدليات، والقدرة على صياغة العروض بلغة الكاشير والمحاسب وأرقام الصندوق، مما يختصر زمن إغلاق الصفقات وإقناع الرعاة.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================
+           SLIDE 10: The Ask & Milestones
+      =============================================== -->
+      <section id="slide-10" class="slide-page hidden bg-cardbg/95 border border-lootGold/40 rounded-2xl p-6 sm:p-12 relative overflow-hidden glow-gold">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="px-3 py-1 rounded bg-lootGold/10 border border-lootGold/30 text-lootGold font-mono text-xs font-bold">10 // THE ASK & ROADMAP</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-white">الفرصة الاستثمارية وخارطة الطريق</h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-5">
+            <h3 class="text-2xl font-bold text-white font-cairo">
+              جولة تمويل تأسيسية (Seed Round)
+            </h3>
+            <p class="text-techSlate leading-relaxed text-sm">
+              المشروع حالياً في مرحلة النموذج الأولي (Bootstrapped MVP). نسعى لشراكة استثمارية ذكية تسرع من السيطرة الميدانية على أولى مناطق التوسع.
+            </p>
+
+            <div class="space-y-3">
+              <div class="flex items-center justify-between text-xs font-cairo font-bold">
+                <span>توزيع الميزانية المستهدفة</span>
+              </div>
+              <div class="w-full bg-void rounded-full h-3 flex overflow-hidden border border-gray-800">
+                <div class="bg-cyanNeon h-full" style="width: 70%" title="70% مبيعات ميدانية وإطلاق"></div>
+                <div class="bg-lootGold h-full" style="width: 20%" title="20% خوادم وبنية تحتية"></div>
+                <div class="bg-actionGreen h-full" style="width: 10%" title="10% تراخيص وقانوني"></div>
+              </div>
+              <div class="flex justify-between text-[11px] text-techSlate">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cyanNeon"></span> 70% مبيعات ميدانية ورعايات</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-lootGold"></span> 20% ترقية البنية التحتية</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-actionGreen"></span> 10% تراخيص وتشغيل</span>
+              </div>
+            </div>
+
+            <!-- Target Milestones (6 Months) -->
+            <div class="grid grid-cols-3 gap-3 pt-3 border-t border-gray-800 text-center">
+              <div class="bg-void/60 p-3 rounded-xl border border-gray-800">
+                <span class="text-lootGold font-black text-xl font-mono block">50+</span>
+                <span class="text-[11px] text-techSlate">متجر ومقهى متعاقد</span>
+              </div>
+              <div class="bg-void/60 p-3 rounded-xl border border-gray-800">
+                <span class="text-cyanNeon font-black text-xl font-mono block">10,000+</span>
+                <span class="text-[11px] text-techSlate">مستخدم نشط شهرياً</span>
+              </div>
+              <div class="bg-void/60 p-3 rounded-xl border border-gray-800">
+                <span class="text-actionGreen font-black text-xl font-mono block">Break-even</span>
+                <span class="text-[11px] text-techSlate">نقطة التعادل المالي</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact & Action Box -->
+          <div class="lg:col-span-5 bg-void p-6 rounded-2xl border border-lootGold/30 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-lootGold/10 border border-lootGold/30 flex items-center justify-center text-lootGold text-2xl mx-auto">
+              <i class="fa-solid fa-handshake-angle"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white font-cairo">لفتح باب الشراكة والاستثمار</h4>
+            <p class="text-xs text-techSlate">
+              مستعدون لتقديم عرض ميداني حي (Live Demo) في شوارع الرمادي واختبار التقنية على أرض الواقع.
+            </p>
+            <div class="pt-2">
+              <button onclick="window.print()" class="w-full py-3 bg-gradient-to-r from-lootGold to-amber-500 text-void font-cairo font-bold rounded-xl text-sm shadow-lg hover:brightness-110 transition cursor-pointer">
+                <i class="fa-solid fa-print"></i> طباعة العرض أو حفظه كـ PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Bottom Slide Controls Bar (Screen only) -->
+  <footer class="no-print border-t border-gray-800/80 bg-void/90 backdrop-blur-md px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="text-xs text-techSlate">
+      استخدم مفاتيح الأسهم <kbd class="px-1.5 py-0.5 rounded bg-gray-800 text-white font-mono text-[10px]">←</kbd> <kbd class="px-1.5 py-0.5 rounded bg-gray-800 text-white font-mono text-[10px]">→</kbd> في لوحة المفاتيح للتنقل بين الشرائح
+    </div>
+
+    <!-- Slide Thumb Dots -->
+    <div id="dotsContainer" class="flex items-center gap-1.5 overflow-x-auto py-1">
+      <!-- Dots injected via JS -->
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="showSlide(0)" class="text-xs text-techSlate hover:text-cyanNeon transition font-cairo">البداية</button>
+      <span class="text-gray-700">|</span>
+      <button onclick="showSlide(9)" class="text-xs text-techSlate hover:text-lootGold transition font-cairo">الخاتمة</button>
+    </div>
+  </footer>
+
+  <script>
+    const totalSlides = 10;
+    let currentSlide = 0;
+
+    const slides = Array.from({ length: totalSlides }, (_, i) => document.getElementById(`slide-${i + 1}`));
+    const counterEl = document.getElementById('currentSlideNumber');
+    const dotsContainer = document.getElementById('dotsContainer');
+
+    // Create thumbnail dots
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('button');
+      dot.className = `w-7 h-2 rounded-full transition-all duration-300 cursor-pointer ${i === 0 ? 'bg-cyanNeon w-9' : 'bg-gray-700 hover:bg-gray-500'}`;
+      dot.title = `الانتقال للشريحة ${i + 1}`;
+      dot.onclick = () => showSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    function updateDots() {
+      const dots = dotsContainer.children;
+      for (let i = 0; i < dots.length; i++) {
+        if (i === currentSlide) {
+          dots[i].className = 'w-9 h-2 rounded-full bg-cyanNeon transition-all duration-300';
+        } else {
+          dots[i].className = 'w-6 h-2 rounded-full bg-gray-700 hover:bg-gray-500 transition-all duration-300';
+        }
+      }
+    }
+
+    function showSlide(index) {
+      if (index < 0 || index >= totalSlides) return;
+      slides[currentSlide].classList.add('hidden');
+      currentSlide = index;
+      slides[currentSlide].classList.remove('hidden');
+      counterEl.textContent = String(currentSlide + 1).padStart(2, '0');
+      updateDots();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        showSlide(currentSlide + 1);
+      } else {
+        showSlide(0); // Loop back
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        showSlide(currentSlide - 1);
+      } else {
+        showSlide(totalSlides - 1);
+      }
+    }
+
+    // Keyboard Arrow navigation
+    window.addEventListener('keydown', (e) => {
+      // In RTL, ArrowLeft usually means forward/next in slides, ArrowRight means back
+      if (e.key === 'ArrowLeft' || e.key === 'PageDown' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowRight' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+
+    // Touch swipe support for mobile devices
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          prevSlide(); // Swiped right
+        } else {
+          nextSlide(); // Swiped left
+        }
+      }
+    }
+  </script>
+</body>
+</html>
